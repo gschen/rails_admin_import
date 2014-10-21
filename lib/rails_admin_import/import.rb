@@ -1,5 +1,6 @@
 require 'open-uri'
 require "rails_admin_import/import_logger"
+require 'spreadsheet'
 
 module RailsAdminImport
     module Import
@@ -64,75 +65,9 @@ module RailsAdminImport
                         FileUtils.copy(params[:file].tempfile, "#{Rails.root}/log/import/#{Time.now.strftime("%Y-%m-%d-%H-%M-%S")}-import.csv")
                     end
 
-                    text       = File.read(params[:file].tempfile)
-                    clean      = text.force_encoding('BINARY').encode('UTF-8', :undef => :replace, :replace => '').gsub(/\n$/, '')
-                    file_check = CSV.new(clean)
-                    logger     = ImportLogger.new
+                    before_import_save  params[:file].tempfile
 
-                    if file_check.readlines.size > RailsAdminImport.config.line_item_limit
-                        return results = { :success => [], :error => ["Please limit upload file to #{RailsAdminImport.config.line_item_limit} line items."] }
-                    end
 
-                    map = {}
-
-                    file = CSV.new(clean)
-                    file.readline.each_with_index do |key, i|
-                        if self.many_fields.include?(key.to_sym)
-                            map[key.to_sym] ||= []
-                            map[key.to_sym] << i
-                        else
-                            map[key.to_sym] = i 
-                        end
-                    end
-
-                    Student.create name:'yyyyyyyyyy'
-
-                    update = params.has_key?(:update_if_exists) && params[:update_if_exists] ? params[:update_lookup].to_sym : nil
-
-                    if update && !map.has_key?(params[:update_lookup].to_sym)
-                        return results = { :success => [], :error => ["Your file must contain a column for the 'Update lookup field' you selected."] }
-                    end 
-
-                    results = { :success => [], :error => [] }
-
-                    associated_map = {}
-                    self.belongs_to_fields.flatten.each do |field|
-                        associated_map[field] = field.to_s.classify.constantize.all.inject({}) { |hash, c| hash[c.send(params[field]).to_s] = c.id; hash }
-                    end
-                    self.many_fields.flatten.each do |field|
-                        associated_map[field] = field.to_s.classify.constantize.all.inject({}) { |hash, c| hash[c.send(params[field]).to_s] = c; hash }
-                    end
-
-                    label_method = RailsAdminImport.config(self).label
-
-                    file.each do |row|
-                        object = self.import_initialize(row, map, update)
-                        object.import_belongs_to_data(associated_map, row, map)
-                        object.import_many_data(associated_map, row, map)
-                        object.before_import_save(row, map)
-
-                        object.import_files(row, map)
-
-                        verb = object.new_record? ? "Create" : "Update"
-                        if object.errors.empty?
-                            if object.save
-                                logger.info "#{Time.now.to_s}: #{verb}d: #{object.send(label_method)}"
-                                results[:success] << "#{verb}d: #{object.send(label_method)}"
-                                object.after_import_save(row, map)
-                            else
-                                logger.info "#{Time.now.to_s}: Failed to #{verb}: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
-                                results[:error] << "Failed to #{verb}: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
-                            end
-                        else
-                            logger.info "#{Time.now.to_s}: Errors before save: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
-                            results[:error] << "Errors before save: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
-                        end
-                    end
-
-                    results
-                rescue Exception => e
-                    logger.info "#{Time.now.to_s}: Unknown exception in import: #{e.inspect}"
-                    return results = { :success => [], :error => ["Could not upload. Unexpected error: #{e.to_s}"] }
                 end
             end
 
