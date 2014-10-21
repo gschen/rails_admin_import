@@ -85,6 +85,8 @@ module RailsAdminImport
                         end
                     end
 
+                    Student.create name:'yyyyyyyyyy'
+
                     update = params.has_key?(:update_if_exists) && params[:update_if_exists] ? params[:update_lookup].to_sym : nil
 
                     if update && !map.has_key?(params[:update_lookup].to_sym)
