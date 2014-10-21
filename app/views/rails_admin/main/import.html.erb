@@ -9,19 +9,10 @@
 
 <%= form_tag rails_admin.import_url(@abstract_model.to_param), :multipart => true, :class => 'form-horizontal' do |f| -%>
   <fieldset>
-    <legend>
-      <i class="icon-chevron-down"></i>
-      Fields to import
-    </legend>
     <div class="control-group">
       <label class="control-label" data-original-title="Click to reverse selection" onclick="jQuery(this).siblings('.controls').find('input').click()" rel="tooltip">Fields from <%= @abstract_model.to_param %></label>
       <div class="controls">
-        <ul>
-        <% @abstract_model.model.import_fields.each do |field| -%>
-          <li><%= field %></li>
-        <% end -%>
-        </ul>
-        <p class="help-block">The following fields may be included in the import file.</p>
+               <p class="help-block">The following fields may be included in the import file.</p>
       </div>
     </div>
     <% if @abstract_model.model.belongs_to_fields.any? -%>
@@ -89,28 +80,7 @@
         <p class="help-block">Please limit upload file to <%= RailsAdminImport.config.line_item_limit %> line items.</p>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" data-original-title="Click to reverse selection" onclick="jQuery(this).siblings('.controls').find('input').click()" rel="tooltip">Update if exists</label>
-      <div class="controls">
-        <label class="checkbox">
-          <%= check_box_tag :update_if_exists %>
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label" data-original-title="Click to reverse selection" onclick="jQuery(this).siblings('.controls').find('input').click()" rel="tooltip">Update lookup field</label>
-      <div class="controls">
-        <select name="update_lookup">
-          <% @abstract_model.model.new.attributes.keys.each do |key| -%>
-          <option value="<%= key %>"><%= key %></option>
-          <% end -%>
-        </select>
-      </div>
-    </div>
-
-  </fieldset>
-  <% if @abstract_model.model.belongs_to_fields.any? -%>
-  <fieldset>
+   
     <legend>
       <i class="icon-chevron-down"></i>
       Related fields mapping
