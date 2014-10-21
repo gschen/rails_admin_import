@@ -65,7 +65,7 @@ module RailsAdminImport
                         FileUtils.copy(params[:file].tempfile, "#{Rails.root}/log/import/#{Time.now.strftime("%Y-%m-%d-%H-%M-%S")}-import.csv")
                     end
 
-                    Student.import_all params[:file].tempfile
+                    Student.import_all params[:file].tempfile.to_s
 
 
                 end
