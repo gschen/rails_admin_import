@@ -113,7 +113,14 @@ module RailsAdminImport
 
                         verb = object.new_record? ? "Create" : "Update"
                         if object.errors.empty?
-                            
+                            if object.save
+                                logger.info "#{Time.now.to_s}: #{verb}d: #{object.send(label_method)}"
+                                results[:success] << "#{verb}d: #{object.send(label_method)}"
+                                object.after_import_save(row, map)
+                            else
+                                logger.info "#{Time.now.to_s}: Failed to #{verb}: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
+                                results[:error] << "Failed to #{verb}: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
+                            end
                         else
                             logger.info "#{Time.now.to_s}: Errors before save: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
                             results[:error] << "Errors before save: #{object.send(label_method)}. Errors: #{object.errors.full_messages.join(', ')}."
